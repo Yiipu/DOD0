@@ -90,12 +90,13 @@ def dalle2(msg):
 
 def GPT3(msg):
     openid=msg.source
+    users = tokenupdate.load_dict_from_json_file('users_dict.json')
     preview=users['1'][openid]['prompt']
     response = openai.Completion.create(
        model="text-davinci-003",
        prompt=(f"{preview}\n{msg.content}"),
-       max_tokens=128,
-       temperature=0.3,
+       max_tokens=600,
+       temperature=0.9,
     )
     reply_content = response["choices"][0]["text"]
     new_preview=preview+msg.content+reply_content
@@ -187,12 +188,6 @@ def send_typing(msg):
     return ""
 
 app_wechat = Flask(__name__)
-app_page = Flask(__name__, template_folder='DOD0397')
-
-@app_page.route("/dodo")
-def dodo():
-    return render_template("index.html")
-
 @app_wechat.route("/wechat", methods=["GET", "POST"])
 def wechat():
     # 服务器认证
@@ -259,4 +254,3 @@ if __name__ == "__main__":
     client = WeChatClient(appid, appsecret)
     # 启动app
     app_wechat.run(host='0.0.0.0',port=80)
-    app_page.run(host='0.0.0.0',port=81)

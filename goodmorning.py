@@ -15,28 +15,28 @@ location_map={
     "jize":"鸡泽县",
     "fengzhen":"丰镇市",
     "jinghai":"静海区",
-    "wuhan":"武汉市"
+    "hongshan":"洪山区"
     }
 
 def good_morning():
-    for user in users["1"]:
+    # logging
+    print(today.strftime("%Y年%m月%d日"))
+    for user_id, user_info in users['1'].items():
         today=datetime.datetime.now()
-        # logging
-        print(today.strftime("%Y年%m月%d日"))
         day=datetime.datetime(2022, 9, 21)
-        user_location_id=cities[user['location']]
+        user_location_id=cities[user_info['location']]
         url_1 = f"{hefeng_index_url}type=3,5&location={user_location_id}&key={hefeng_key}"
         url_2 = f"{hefeng_3d_url}location={user_location_id}&key={hefeng_key}"
         hefeng_response_1 = requests.get(url_1).json()
         hefeng_response_2 = requests.get(url_2).json()
         if hefeng_response_1['code'] != '200':
-            return client.message.send_text(user, "天气获取失败")
+            return client.message.send_text(user_id, "天气获取失败")
         url = hefeng_response_2['fxLink']
         daily1 = hefeng_response_1['daily']
         daily2 = hefeng_response_2['daily']
         data={
             "name": {
-                "value": user['name'],
+                "value": user_info['name'],
                 "color": "#FFA07A"
                 },
             "time":{
@@ -48,7 +48,7 @@ def good_morning():
                 "color": "#777777"
                 },
             "location": {
-                "value": location_map[user['location']],
+                "value": location_map[user_info['location']],
                 "color": "#FFA07A"
                 },
             "day": {
@@ -80,7 +80,7 @@ def good_morning():
                 "color": "#FFA07A"
                 }
             }
-        re = client.message.send_template(user, morning_template, data, url)
+        re = client.message.send_template(user_id, morning_template, data, url)
         # logging
         print(re)
 
@@ -95,11 +95,11 @@ if __name__ == "__main__":
     cities = data['cities']
     colors = data['colors']
 
-    users = tokenupdate.update_user_dict()
+    users = tokenupdate.load_dict_from_json_file('users_dict.json')
     client = WeChatClient(appid, appsecret)
 
-    # schedule.every(5).seconds.do(good_morning)
-    schedule.every().day.at("08:00").do(good_morning)
+    #schedule.every(5).seconds.do(good_morning)
+    schedule.every().day.at("09:00").do(good_morning)
     while True:
         schedule.run_pending()
         time.sleep(1)
