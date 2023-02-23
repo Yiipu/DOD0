@@ -19,11 +19,11 @@ location_map={
     }
 
 def good_morning():
+    today=datetime.datetime.now()
+    day=datetime.datetime(2022, 9, 21)
     # logging
     print(today.strftime("%Y年%m月%d日"))
     for user_id, user_info in users['1'].items():
-        today=datetime.datetime.now()
-        day=datetime.datetime(2022, 9, 21)
         user_location_id=cities[user_info['location']]
         url_1 = f"{hefeng_index_url}type=3,5&location={user_location_id}&key={hefeng_key}"
         url_2 = f"{hefeng_3d_url}location={user_location_id}&key={hefeng_key}"
