@@ -127,6 +127,7 @@ if __name__ == "__main__":
     appid = data['app']['appid']
     appsecret = data['app']['appsecret']
     morning_template = data['template']['morning']
+    table_template = data['template']['table']
     hefeng_key = data['key']['hefeng']
     hefeng_index_url = data['url']['hefeng_api']['index']
     hefeng_3d_url = data['url']['hefeng_api']['3d']
