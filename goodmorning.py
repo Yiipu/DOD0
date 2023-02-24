@@ -110,11 +110,11 @@ def daily_classtable():
         for i in range(4):
             data.update({
                 f"class{i+1}": {
-                    "value": schedule[today][i][0],
+                    "value": table[today][i][0],
                     "color": "#777777"
                 },
                 f"room{i+1}": {
-                    "value": schedule[today][i][1],
+                    "value": table[today][i][1],
                     "color": "#777777"
                 }
             })
@@ -132,7 +132,7 @@ if __name__ == "__main__":
     hefeng_3d_url = data['url']['hefeng_api']['3d']
     cities = data['cities']
     colors = data['colors']
-    schedule = tokenupdate.init_schedule()
+    table = tokenupdate.init_schedule()
 
     users = tokenupdate.load_dict_from_json_file('users_dict.json')
     client = WeChatClient(appid, appsecret)
