@@ -36,7 +36,7 @@ def init_schedule():
         data = file.read().decode("utf-8")
         lines = data.strip().split("\n")
         for i, line in enumerate(lines):
-            day = days[i // 5]
+            day = days[i // 4]
             course, room = line.strip().split()
             if day not in schedule:
                 schedule[day] = []

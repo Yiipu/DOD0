@@ -9,6 +9,7 @@ users = None
 appid = None
 appsecret = None
 morning_template = None
+table_template = None
 hefeng_key = None
 hefeng_url = None
 location_map={
@@ -17,6 +18,14 @@ location_map={
     "jinghai":"静海区",
     "hongshan":"洪山区"
     }
+day_map = {
+    'Monday':'周一',
+    'Tuesday':'周二', 
+    'Wednesday':'周三', 
+    'Thursday':'周四', 
+    'Friday':'周五'
+    }
+
 
 def good_morning():
     today=datetime.datetime.now()
@@ -83,6 +92,35 @@ def good_morning():
         re = client.message.send_template(user_id, morning_template, data, url)
         # logging
         print(re)
+        
+def daily_classtable():
+    today=datetime.datetime.now()
+    print(today.strftime("%Y年%m月%d日"))
+    today = today.strftime("%A")
+    if today not in schedule:
+        print("weekend")
+        return
+    for user_id, user_info in users['0'].items(): 
+        data={
+            "day":{
+                "value":day_map[today][0][],
+                "color":"#FFA07A"
+                }
+            }
+        for i in range(4) 
+            data.append(
+                f"class{i+1}":{
+                    "value":schedule[today][i][0],
+                    "color":"#777777"
+                    },
+                f"room{i+1}":{
+                    "value":schedule[today][i][1],
+                    "color":"#777777" 
+                    }
+                )
+        re = client.message.send_template(user_id, morning_template, data)
+        # logging
+        print(re)
 
 if __name__ == "__main__":
     data = tokenupdate.read_constant_keys()
@@ -94,12 +132,13 @@ if __name__ == "__main__":
     hefeng_3d_url = data['url']['hefeng_api']['3d']
     cities = data['cities']
     colors = data['colors']
+    schedule = tokenupdate.init_schedule()
 
     users = tokenupdate.load_dict_from_json_file('users_dict.json')
     client = WeChatClient(appid, appsecret)
 
-    #schedule.every(5).seconds.do(good_morning)
-    schedule.every().day.at("09:00").do(good_morning)
+    schedule.every(5).seconds.do(daily_classtable)
+    schedule.every().day.at("07:00").do(good_morning)
     while True:
         schedule.run_pending()
         time.sleep(1)
