@@ -103,7 +103,7 @@ def daily_classtable():
     for user_id, user_info in users['0'].items(): 
         data={
             "day":{
-                "value":day_map[today][0][],
+                "value":day_map[today],
                 "color":"#FFA07A"
                 }
             }
