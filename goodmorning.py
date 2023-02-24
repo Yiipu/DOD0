@@ -118,7 +118,7 @@ def daily_classtable():
                     "color": "#777777"
                 }
             })
-        re = client.message.send_template(user_id, morning_template, data)
+        re = client.message.send_template(user_id, table_template, data)
         # logging
         print(re)
 
