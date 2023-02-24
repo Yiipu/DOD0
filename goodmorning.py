@@ -107,7 +107,7 @@ def daily_classtable():
                 "color":"#FFA07A"
                 }
             }
-        for i in range(4) 
+        for i in range(4):
             data.append(
                 f"class{i+1}":{
                     "value":schedule[today][i][0],
