@@ -97,7 +97,7 @@ def daily_classtable():
     today=datetime.datetime.now()
     print(today.strftime("%Y年%m月%d日"))
     today = today.strftime("%A")
-    if today not in schedule:
+    if today not in table:
         print("weekend")
         return
     for user_id, user_info in users['0'].items(): 
