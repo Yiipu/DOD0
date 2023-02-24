@@ -105,8 +105,10 @@ def daily_classtable():
             "day": {
                 "value": day_map[today],
                 "color": "#FFA07A"
-            },
-            **{
+            }
+        }
+        for i in range(4):
+            data.update({
                 f"class{i+1}": {
                     "value": schedule[today][i][0],
                     "color": "#777777"
@@ -115,9 +117,7 @@ def daily_classtable():
                     "value": schedule[today][i][1],
                     "color": "#777777"
                 }
-                for i in range(4)
-            }
-        }
+            })
         re = client.message.send_template(user_id, morning_template, data)
         # logging
         print(re)
