@@ -101,23 +101,23 @@ def daily_classtable():
         print("weekend")
         return
     for user_id, user_info in users['0'].items(): 
-        data={
-            "day":{
-                "value":day_map[today],
-                "color":"#FFA07A"
+        data = {
+            "day": {
+                "value": day_map[today],
+                "color": "#FFA07A"
+            },
+            **{
+                f"class{i+1}": {
+                    "value": schedule[today][i][0],
+                    "color": "#777777"
+                },
+                f"room{i+1}": {
+                    "value": schedule[today][i][1],
+                    "color": "#777777"
                 }
+                for i in range(4)
             }
-        for i in range(4):
-            data.append(
-                f"class{i+1}":{
-                    "value":schedule[today][i][0],
-                    "color":"#777777"
-                    },
-                f"room{i+1}":{
-                    "value":schedule[today][i][1],
-                    "color":"#777777" 
-                    }
-                )
+        }
         re = client.message.send_template(user_id, morning_template, data)
         # logging
         print(re)
