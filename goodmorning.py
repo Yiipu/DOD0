@@ -1,4 +1,4 @@
-import tokenupdate
+﻿import tokenupdate
 import schedule
 import datetime
 import time
@@ -137,9 +137,10 @@ if __name__ == "__main__":
 
     users = tokenupdate.load_dict_from_json_file('users_dict.json')
     client = WeChatClient(appid, appsecret)
-
-    schedule.every(5).seconds.do(daily_classtable)
-    schedule.every().day.at("07:00").do(good_morning)
+    
+    schedule.every().day.at("07:10").do(good_morning)
+    schedule.every().day.at("07:30").do(daily_classtable)
+    
     while True:
         schedule.run_pending()
         time.sleep(1)
