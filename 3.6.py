@@ -1,12 +1,9 @@
 ﻿# -*- coding: utf-8 -*-
 from urllib import response
-from flask import Flask, request, render_template
+from flask import Flask, request
 from wechatpy import parse_message, create_reply
-from wechatpy.replies import MusicReply
 from wechatpy.utils import check_signature
 from wechatpy.exceptions import InvalidSignatureException
-from wechatpy.replies import EmptyReply
-from wechatpy.events import SubscribeEvent
 from wechatpy.client import WeChatClient
 import tokenupdate
 import threading

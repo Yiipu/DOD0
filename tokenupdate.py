@@ -5,9 +5,11 @@ import os
 import requests
 from wechatpy.client import WeChatClient
 
-def read_constant_keys():
+def read_constant_keys(target=None):
     with open('constant_keys.json', 'r', encoding="utf-8-sig") as f:
         data = json.load(f)
+    if target is not None:
+        return data[target]
     return data
 
 # set api key & token
