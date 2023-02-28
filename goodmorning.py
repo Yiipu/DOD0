@@ -100,7 +100,7 @@ def daily_classtable():
     if today not in table:
         print("weekend")
         return
-    for user_id, user_info in users['0'].items(): 
+    for user_id, user_info in users['1'].items(): 
         data = {
             "day": {
                 "value": day_map[today],
