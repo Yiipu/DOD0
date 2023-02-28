@@ -37,9 +37,9 @@ def clear():
 def wechat_handler():
     message = request.wechat_msg
     handler = handlers.get(message.type, handle_unsupported)
-    t=threading.Thread(target=handler(message))
+    t=threading.Thread(target=handler,args=(message,))
     t.start()
-    return ''
+    return ""
 
 
 @app.route('/access_token')

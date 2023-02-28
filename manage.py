@@ -98,7 +98,12 @@ if __name__ == "__main__":
                         "type": "click",
                         "name": "帮助",
                         "key": "he"
-                    }
+                    },
+                    {
+                        "type":"click",
+                        "name":"新对话",
+                        "key":"nc"
+                    } 
                 ]
             }
         ]

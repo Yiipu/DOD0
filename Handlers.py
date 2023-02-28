@@ -110,7 +110,9 @@ def handle_text(msg):
             return client.message.send_text(msg.source, "没有找到歌曲")
 
     def GPT(msg):
-        openid=msg.source
+        print('GPT called!')
+        openid = msg.source
+        openai.api_key = read_constant_keys('key')['openai']
         users = load_user_dict('users_dict.json')
         preview=users['1'][openid]['prompt']
         response = openai.Completion.create(
@@ -194,6 +196,7 @@ def handle_event(msg):
             table = init_schedule()
             table_template = read_constant_keys('template')['table']
             today = datetime.datetime.now() 
+            plus=int(plus)
             today = today + datetime.timedelta(days=plus)
             today = today.strftime("%A")
             if today not in table:
@@ -239,6 +242,12 @@ def handle_event(msg):
                     }
                 })
             return client.message.send_template(msg.source, help_template, data)
+
+        @register_click_handler('nc')
+        def new_chat(msg, _):
+            openid=msg.source
+            write_user_dict(openid,prompt=' ')
+            return client.message.send_text(openid, 'GPT新对话') 
 
         send_typing(msg)
         click_handler = click_handlers.get(msg.key[:2])
