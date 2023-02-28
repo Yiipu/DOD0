@@ -119,25 +119,6 @@ def handle_text(msg):
     text_handler = text_handlers.get(msg.content[:4], GPT)
     return text_handler(msg)
 
-@register_handler('image')
-def handle_image(msg):
-    return ''
-
-@register_handler('voice')
-def handle_voice(msg):
-    return ''
-
-@register_handler('video')
-def handle_video(msg):
-    return ''
-
-@register_handler('location')
-def handle_location(msg):
-    return ''
-
-@register_handler('link')
-def handle_link(msg):
-    return ''
 
 @register_handler('event')
 def handle_event(msg):
@@ -192,7 +173,7 @@ def handle_event(msg):
                 return client.message.send_text(openid, '您还没有上传课表')
             table_template = read_constant_keys('template')['table']
             today = datetime.datetime.now()
-            plus=int(plus)
+            plus = int(plus)
             today = today + datetime.timedelta(days=plus)
             today = today.strftime("%A")
             if today not in table:

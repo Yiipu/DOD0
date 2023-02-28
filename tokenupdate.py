@@ -11,7 +11,7 @@ def read_constant_keys(target=None):
 # user
 def save_user_dict(file_path, data):
     with open(file_path, 'w', encoding='utf-8') as file:
-        json.dump(data, file, ensure_ascii=False)
+        json.dump(data, file, ensure_ascii=False, indent=4)
 
 def load_user_dict(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
