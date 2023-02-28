@@ -92,7 +92,7 @@ if __name__ == "__main__":
                     {
                         "type": "view",
                         "name": "主页",
-                        "url": "http://pathpanic.gitee.io/dod0379"
+                        "url": "http://101.42.37.141:81"
                     },
                     {
                         "type": "click",
