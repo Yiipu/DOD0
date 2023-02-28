@@ -81,18 +81,23 @@ def read_token():
     return data['access_token']
 
 # user
-def save_dict_to_json_file(file_path, data):
+def save_user_dict(file_path, data):
     with open(file_path, 'w', encoding='utf-8') as file:
         json.dump(data, file, ensure_ascii=False)
 
-def load_dict_from_json_file(file_path):
+def load_user_dict(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         return json.load(file)
 
-def write_user_dict(openid, location = None, prompt = None):
-    users_dict = load_dict_from_json_file('users_dict.json')
+def write_user_dict(openid, location = None, prompt = ' '):
+    users_dict = load_user_dict('users_dict.json')
     if location:
         users_dict['1'][openid]['location']=location
     if prompt:
         users_dict['1'][openid]['prompt']=prompt
-    save_dict_to_json_file('users_dict.json', users_dict)
+    save_user_dict('users_dict.json', users_dict)
+
+def delet_user(openid):
+    users_dict = load_user_dict('users_dict.json')
+    del users_dict['1'][openid]
+    save_user_dict('users_dict.json', users_dict)

@@ -3,7 +3,6 @@
 
 from flask import Flask, request, session
 from flask_wechatpy import Wechat, wechat_required, oauth
-from wechatpy.replies import create_reply
 import tokenupdate
 import threading
 from Handlers import handlers, handle_unsupported
@@ -14,7 +13,7 @@ data = tokenupdate.read_constant_keys()
 app.config['WECHAT_TOKEN'] = data['key']['WECHAT_VERIFY_TOKEN']
 app.config['WECHAT_APPID'] = data['app']['appid']
 app.config['WECHAT_SECRET'] = data['app']['appsecret']
-app.config['DEBUG'] = True
+app.config['DEBUG'] = False
 app.config['SECRET_KEY'] = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 
 wechat = Wechat(app)
@@ -34,7 +33,7 @@ def clear():
 
 
 @app.route('/wechat', methods=['GET', 'POST'])
-#@wechat_required
+@wechat_required
 def wechat_handler():
     message = request.wechat_msg
     handler = handlers.get(message.type, handle_unsupported)
