@@ -3,8 +3,8 @@ from wechatpy.client import WeChatClient
 from tokenupdate import (read_constant_keys, 
                          load_user_dict, 
                          write_user_dict, 
-                         delet_user,
-                         init_schedule)
+                         delet_user
+                         )
 import openai
 import requests
 import feedparser
@@ -116,10 +116,8 @@ def handle_text(msg):
         write_user_dict(group, msg.source, 'prompt', new_preview)
         return client.message.send_text(openid, reply_content)
 
-    send_typing(msg)
     text_handler = text_handlers.get(msg.content[:4], GPT)
     return text_handler(msg)
-
 
 @register_handler('image')
 def handle_image(msg):
@@ -247,7 +245,6 @@ def handle_event(msg):
             write_user_dict(group, openid,prompt=' ')
             return client.message.send_text(openid, 'GPT新对话') 
 
-        send_typing(msg)
         click_handler = click_handlers.get(msg.key[:2])
         return click_handler(msg, msg.key[2:])
 
