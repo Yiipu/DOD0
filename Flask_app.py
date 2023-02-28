@@ -18,18 +18,35 @@ app.config['SECRET_KEY'] = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 
 wechat = Wechat(app)
 
+def send_typing(msg):
+    data={
+        "touser" : msg.source,
+        "command" : "Typing"
+        }
+    wechat_api = read_constant_keys('url')['wechat_api']
+    return requests.post(wechat_api 
+                             + "message/custom/typing?access_token="
+                             + wechat.access_token, json = data).json()
 
 @app.route('/')
 @oauth(scope='snsapi_userinfo')
 def index():
-    return "hello"
+    print(user_info)
+    return user_info
 
 
 @app.route('/clear')
 def clear():
     if 'wechat_user_id' in session:
         session.pop('wechat_user_id')
-    return "ok"
+        return "ok"
+    else:
+        return "Failed"
+ 
+ 
+@app.route('/table', methods=['GET', 'POST'])           
+def display_timetable():
+    pass
 
 
 @app.route('/wechat', methods=['GET', 'POST'])

@@ -4,7 +4,6 @@ from tokenupdate import (read_constant_keys,
                          load_user_dict, 
                          write_user_dict, 
                          delet_user,
-                         read_token,
                          init_schedule)
 import openai
 import requests
@@ -14,22 +13,7 @@ import datetime
 app = read_constant_keys('app')
 client = WeChatClient(app['appid'], app['appsecret'])
 
-def send_typing(msg):
-    data={
-        "touser" : msg.source,
-        "command" : "Typing"
-        }
-    wechat_api = read_constant_keys('url')['wechat_api']
-    ACCESS_TOKEN =  read_token()
-    return requests.post(wechat_api 
-                             + "message/custom/typing?access_token="
-                             + ACCESS_TOKEN, json = data).json()
-
-def SubReddit(msg,Sub=None):
-    if Sub:
-        sub = Sub
-    else:
-        sub = msg.content[5:]
+def SubReddit(msg,sub=None):
     feed = None
     reddit=read_constant_keys('url')['reddit']
     if sub:
@@ -47,6 +31,11 @@ def SubReddit(msg,Sub=None):
         feed += '<a href="https://www.zhihu.com/question/22391673/answer/176643379">小众但好玩的subreddits版块</a>\n'
     return client.message.send_text(msg.source, feed)
 
+def get_group(openid):
+    users = load_user_dict('users_dict.json')
+    group = '1' if openid in users['1'] else '2'
+    return group
+
 # 注册消息处理器
 handlers = {}
 
@@ -59,6 +48,7 @@ def register_handler(msg_type):
 @register_handler('text')
 def handle_text(msg):
 
+    # 注册文本消息处理器
     text_handlers = {}
 
     def register_text_handler(prefix):
@@ -69,7 +59,7 @@ def handle_text(msg):
 
     @register_text_handler('feed')
     def subreddit_customized(msg):
-        return SubReddit(msg)
+        return SubReddit(msg, msg.content[5:])
 
     @register_text_handler('make')
     def DALLE2(msg):
@@ -110,11 +100,11 @@ def handle_text(msg):
             return client.message.send_text(msg.source, "没有找到歌曲")
 
     def GPT(msg):
-        print('GPT called!')
         openid = msg.source
         openai.api_key = read_constant_keys('key')['openai']
         users = load_user_dict('users_dict.json')
-        preview=users['1'][openid]['prompt']
+        group = get_group(openid)
+        preview=users[group][openid]['prompt']
         response = openai.Completion.create(
            model="text-davinci-003",
            prompt=(f"{preview}\n{msg.content}"),
@@ -123,7 +113,7 @@ def handle_text(msg):
         )
         reply_content = response["choices"][0]["text"]
         new_preview=preview+msg.content+reply_content
-        write_user_dict(msg.source,prompt=new_preview)
+        write_user_dict(group, msg.source, 'prompt', new_preview)
         return client.message.send_text(openid, reply_content)
 
     send_typing(msg)
@@ -154,6 +144,7 @@ def handle_link(msg):
 @register_handler('event')
 def handle_event(msg):
 
+    # 注册事件消息处理器
     event_handlers = {}
 
     def register_event_handler(event):
@@ -166,8 +157,8 @@ def handle_event(msg):
     def handle_subscribe(msg):
         openid=msg.source
         users = load_user_dict('users_dict.json')
-        if openid not in users['1']:
-            write_user_dict(openid)
+        if openid not in users['2']:
+            write_user_dict('2', openid)
         print(openid + '关注')
         return client.message.send_text(openid, '欢迎来到渡渡鸟出版')
 
@@ -175,14 +166,15 @@ def handle_event(msg):
     def handle_unsubscribe(msg):
         openid=msg.source
         users = load_user_dict('users_dict.json')
-        if openid in users['1']:
-            delet_user(openid)
-        print (openid + '取消关注')
+        if openid in users['2']:
+            delet_user('2', openid)
+        print(openid + '取消关注')
         return
 
     @register_event_handler('click')
     def handle_click(msg):
 
+        # 注册点击菜单消息处理器   
         click_handlers={}
 
         def register_click_handler(key):
@@ -193,15 +185,20 @@ def handle_event(msg):
 
         @register_click_handler('kb')
         def Classtable(msg, plus=0):
-            table = init_schedule()
+            openid = msg.source
+            group = get_group(openid)
+            users = load_user_dict('users_dict.json')
+            try:
+                table = users[group][openid]['table']
+            except:
+                return client.message.send_text(openid, '您还没有上传课表')
             table_template = read_constant_keys('template')['table']
-            today = datetime.datetime.now() 
+            today = datetime.datetime.now()
             plus=int(plus)
             today = today + datetime.timedelta(days=plus)
             today = today.strftime("%A")
             if today not in table:
-                print("weekend")
-                return
+                return client.message.send_text(msg.source, '今天是周末')
             data = {
                 "day": {
                     "value": today,
@@ -219,7 +216,7 @@ def handle_event(msg):
                         "color": "#777777"
                     }
                 })
-            return client.message.send_template(msg.source, table_template, data)
+            return client.message.send_template(openid, table_template, data)
 
         @register_click_handler('r/')
         def subreddit_defult(msg, suffix):
@@ -246,7 +243,8 @@ def handle_event(msg):
         @register_click_handler('nc')
         def new_chat(msg, _):
             openid=msg.source
-            write_user_dict(openid,prompt=' ')
+            group = get_group(openid)
+            write_user_dict(group, openid,prompt=' ')
             return client.message.send_text(openid, 'GPT新对话') 
 
         send_typing(msg)
