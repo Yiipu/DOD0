@@ -5,7 +5,7 @@ from flask import Flask, request, session, jsonify, redirect
 from wechatpy.client import WeChatClient
 from wechatpy.oauth import WeChatOAuth
 from flask_wechatpy import Wechat, wechat_required, oauth
-from tokenupdate import load_json
+from file_loader import load_json
 import threading
 import requests
 from Handlers import handlers, handle_unsupported, get_group
@@ -66,7 +66,7 @@ def display_timetable(openid):
             return jsonify(load_json(wxuser_file)[group][openid]['table'])
         except:
             return "No timetable found"
-    else:
+    elif request.method == 'POST':
         return "POST"
 
 

@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 from wechatpy.client import WeChatClient
-from tokenupdate import (load_json, 
+from file_loader import (load_json, 
                          write_user, 
                          delet_user
                          )
@@ -109,7 +109,7 @@ def handle_text(msg):
 
     def GPT(msg):
         openid = msg.source
-        openai.api_key = load_json(config_json, 'key')['openai']
+        openai.api_key = load_json(config_file, 'key')['openai']
         users = load_json(wxuser_file)
         group = get_group(openid)
         preview=users[group][openid]['prompt']
@@ -144,7 +144,7 @@ def handle_event(msg):
     def handle_subscribe(msg):
         openid=msg.source
         users = load_json(wxuser_file)
-        url = load_json(config_file, 'url')['root']
+        root = load_json(config_file, 'url')['root']
         if openid not in users['2']:
             write_user(wxuser_file, '2', openid)
         print(openid + '关注')
@@ -155,7 +155,7 @@ def handle_event(msg):
         openid=msg.source
         users = load_json(wxuser_file)
         if openid in users['2']:
-            delet_user('2', openid)
+            delet_user(wxuser_file, '2', openid)
         print(openid + '取消关注')
         return
 
@@ -176,10 +176,8 @@ def handle_event(msg):
             openid = msg.source
             group = get_group(openid)
             users = load_json(wxuser_file)
-            print(users)
             try:
                 table = users[group][openid]['table']
-                print(table)
             except:
                 return client.message.send_text(openid, '您还没有上传课表')
             table_template = load_json(config_file, 'template')['table']
@@ -198,11 +196,11 @@ def handle_event(msg):
             for i in range(4):
                 data.update({
                     f"class{i+1}": {
-                        "value": table[today][i][0],
+                        "value": table[today]['class'][i],
                         "color": "#777777"
                     },
                     f"room{i+1}": {
-                        "value": table[today][i][1],
+                        "value": table[today]['room'][i],
                         "color": "#777777"
                     }
                 })
