@@ -1,8 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 from wechatpy.client import WeChatClient
-from tokenupdate import (read_constant_keys, 
-                         load_user_dict, 
-                         write_user_dict, 
+from tokenupdate import (load_json, 
+                         write_user, 
                          delet_user
                          )
 import openai
@@ -10,12 +9,15 @@ import requests
 import feedparser
 import datetime
 
-app = read_constant_keys('app')
+config_file = 'constant_keys.json'
+wxuser_file = 'users_dict.json'
+
+app = load_json(config_file, 'app')
 client = WeChatClient(app['appid'], app['appsecret'])
 
 def SubReddit(msg,sub=None):
     feed = None
-    reddit=read_constant_keys('url')['reddit']
+    reddit=load_json(config_file, 'url')['reddit']
     if sub:
         feed = '来自'+ sub + '的订阅\n<····\t····>\n'
         rss = feedparser.parse(reddit+sub+'.rss')
@@ -31,10 +33,16 @@ def SubReddit(msg,sub=None):
         feed += '<a href="https://www.zhihu.com/question/22391673/answer/176643379">小众但好玩的subreddits版块</a>\n'
     return client.message.send_text(msg.source, feed)
 
+
 def get_group(openid):
-    users = load_user_dict('users_dict.json')
-    group = '1' if openid in users['1'] else '2'
+    users = load_json(wxuser_file)
+    group = None
+    for group_id, user_list in users.items():
+        if openid in user_list:
+            group = group_id
+            break
     return group
+
 
 # 注册消息处理器
 handlers = {}
@@ -82,9 +90,9 @@ def handle_text(msg):
 
     @register_text_handler('play')
     def Netease(msg):
-        api_url = read_constant_keys('url')['netease']
+        api_url = load_json(config_file, 'url')['netease']
         song_name = msg.content[5:]
-        song_media_id = read_constant_keys('Media_ID')['song_thumb']
+        song_media_id = load_json(config_file, 'Media_ID')['song_thumb']
         if song_name:
             song_info=requests.get(api_url + 'search?keywords=' 
                                   + song_name 
@@ -101,8 +109,8 @@ def handle_text(msg):
 
     def GPT(msg):
         openid = msg.source
-        openai.api_key = read_constant_keys('key')['openai']
-        users = load_user_dict('users_dict.json')
+        openai.api_key = load_json(config_json, 'key')['openai']
+        users = load_json(wxuser_file)
         group = get_group(openid)
         preview=users[group][openid]['prompt']
         response = openai.Completion.create(
@@ -113,7 +121,7 @@ def handle_text(msg):
         )
         reply_content = response["choices"][0]["text"]
         new_preview=preview+msg.content+reply_content
-        write_user_dict(group, msg.source, 'prompt', new_preview)
+        write_user(wxuser_file, group, msg.source, 'prompt', new_preview)
         return client.message.send_text(openid, reply_content)
 
     text_handler = text_handlers.get(msg.content[:4], GPT)
@@ -135,16 +143,17 @@ def handle_event(msg):
     @register_event_handler('subscribe')
     def handle_subscribe(msg):
         openid=msg.source
-        users = load_user_dict('users_dict.json')
+        users = load_json(wxuser_file)
+        url = load_json(config_file, 'url')['root']
         if openid not in users['2']:
-            write_user_dict('2', openid)
+            write_user(wxuser_file, '2', openid)
         print(openid + '关注')
-        return client.message.send_text(openid, '欢迎来到渡渡鸟出版')
+        return client.message.send_text(openid, f'<a href="{root}:81/">欢迎来到渡渡鸟出版</a>')
 
     @register_event_handler('unsubscribe')
     def handle_unsubscribe(msg):
         openid=msg.source
-        users = load_user_dict('users_dict.json')
+        users = load_json(wxuser_file)
         if openid in users['2']:
             delet_user('2', openid)
         print(openid + '取消关注')
@@ -166,12 +175,14 @@ def handle_event(msg):
         def Classtable(msg, plus=0):
             openid = msg.source
             group = get_group(openid)
-            users = load_user_dict('users_dict.json')
+            users = load_json(wxuser_file)
+            print(users)
             try:
                 table = users[group][openid]['table']
+                print(table)
             except:
                 return client.message.send_text(openid, '您还没有上传课表')
-            table_template = read_constant_keys('template')['table']
+            table_template = load_json(config_file, 'template')['table']
             today = datetime.datetime.now()
             plus = int(plus)
             today = today + datetime.timedelta(days=plus)
@@ -203,9 +214,9 @@ def handle_event(msg):
             
         @register_click_handler('he')
         def Help(msg, _):
-            help_template = read_constant_keys('template')['help']
+            help_template = load_json(config_file, 'template')['help']
             data={}
-            menu=read_constant_keys('menu')
+            menu=load_json(config_file, 'menu')
             for i in range(len(menu['inputs'])):
                 data.update({
                     f"input{i+1}": {
@@ -223,7 +234,7 @@ def handle_event(msg):
         def new_chat(msg, _):
             openid=msg.source
             group = get_group(openid)
-            write_user_dict(group, openid,prompt=' ')
+            write_user(wxuser_file, group, openid, 'prompt', ' ')
             return client.message.send_text(openid, 'GPT新对话') 
 
         click_handler = click_handlers.get(msg.key[:2])
