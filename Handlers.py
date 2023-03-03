@@ -9,6 +9,7 @@ import datetime
 
 config_file = 'constant_keys.json'
 wxuser_file = 'users_dict.json'
+is_ChatGPT_available = True
 
 app = load_json(config_file, 'app')
 client = WeChatClient(app['appid'], app['appsecret'])
@@ -105,37 +106,17 @@ def handle_text(msg):
         else:
             return client.message.send_text(msg.source, "没有找到歌曲")
 
-    def ChatGPT(msg):
+    def Davinci(msg):
         import openai
+        openid = msg.source
         openai.api_key = load_json(config_file, 'key')['openai']
-        openid = msg.source
-        group = get_group(openid)
         users = load_json(wxuser_file)
+        group = get_group(openid)
         try:
-            messages=users[group][openid]['messages']
+            preview=users[group][openid]['prompt']
         except:
-            write_user(wxuser_file, group, openid,{'messages':[]})
-            messages=[]
-        new_usercontent =  {'role':'user','content':msg.content}
-        messages.append(new_usercontent.copy())
-        response = openai.ChatCompletion.create(
-           model="gpt-3.5-turbo",
-           messages=messages
-        )
-        reply_content = response["choices"][0]["message"]['content']
-        new_assis = {'role':'assistant','content':reply_content}
-        new_messages = messages + [new_assis.copy()]
-        write_user(wxuser_file, group, openid,{'messages':new_messages})
-        return client.message.send_text(openid, reply_content)
-
-
-    def Davinvi(msg):
-        import openai
-        openid = msg.source
-        openai.api_key = load_json(config_json, 'key')['openai']
-        users = load_json(wxuser_file)
-        group = get_group(openid)
-        preview=users[group][openid]['prompt']
+            write_user(wxuser_file, group, openid,{"prompt":" "})
+            preview=" "
         response = openai.Completion.create(
            model="text-davinci-003",
            prompt=(f"{preview}\n{msg.content}"),
@@ -147,6 +128,40 @@ def handle_text(msg):
         write_user(wxuser_file, group, msg.source,{"prompt":new_preview})
         return client.message.send_text(openid, reply_content)
 
+
+    def ChatGPT(msg):
+        if is_ChatGPT_available is False:
+            return Davinci(msg)
+        import openai
+        from requests.exceptions import Timeout
+        openai.api_retry = False
+        openai.api_timeout = 7
+        openai.api_key = load_json(config_file, 'key')['openai']
+        openid = msg.source
+        group = get_group(openid)
+        users = load_json(wxuser_file)
+        try:
+            messages=users[group][openid]['messages']
+        except:
+            write_user(wxuser_file, group, openid,{'messages':[]})
+            messages=[]
+        new_usercontent =  {'role':'user','content':msg.content}
+        messages.append(new_usercontent.copy())
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=messages
+            )
+        except:
+            is_ChatGPT_available = False
+            client.message.send_text(openid, 'ChatGPT请求失败，下面返回text-davinci-003的回答')
+            return Davinci(msg)
+        reply_content = response['choices'][0]['message']['content']
+        new_assis = {'role':'assistant','content':reply_content}
+        new_messages = messages + [new_assis.copy()]
+        write_user(wxuser_file, group, openid,{"messages":new_messages})
+        return client.message.send_text(openid, reply_content)
+        
     text_handler = text_handlers.get(msg.content[:4], ChatGPT)
     return text_handler(msg)
 
@@ -257,7 +272,8 @@ def handle_event(msg):
             group = get_group(openid)
             write_user(wxuser_file, group, openid, {"messages":[]})
             write_user(wxuser_file, group, openid, {"prompt":""})
-            return client.message.send_text(openid, 'GPT新对话')
+            is_ChatGPT_available = True
+            return client.message.send_text(openid, '新对话')
             
         @register_click_handler('tq')
         def good_morning(msg, _):
