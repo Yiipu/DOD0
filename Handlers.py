@@ -4,9 +4,7 @@ from file_loader import (load_json,
                          write_user, 
                          delet_user
                          )
-import openai
 import requests
-import feedparser
 import datetime
 
 config_file = 'constant_keys.json'
@@ -16,6 +14,7 @@ app = load_json(config_file, 'app')
 client = WeChatClient(app['appid'], app['appsecret'])
 
 def SubReddit(msg,sub=None):
+    import feedparser
     feed = None
     reddit=load_json(config_file, 'url')['reddit']
     if sub:
@@ -28,9 +27,7 @@ def SubReddit(msg,sub=None):
             if count == 5:
                 break
     else :
-        feed = 'feed 订阅源\n如：\nfeed wordnews\nfeed showerthoughts\n更多订阅源请参考\n' 
-        feed += '<a href="https://zhuanlan.zhihu.com/p/556225966">最新 Reddit 使用指南</a>\n'
-        feed += '<a href="https://www.zhihu.com/question/22391673/answer/176643379">小众但好玩的subreddits版块</a>\n'
+        feed = 'feed 订阅源\n如：\nfeed wordnews\nfeed showerthoughts\n'
     return client.message.send_text(msg.source, feed)
 
 
@@ -71,6 +68,7 @@ def handle_text(msg):
 
     @register_text_handler('make')
     def DALLE2(msg):
+        import openai
         prompt = msg.content[5:]
         response = openai.Image.create(
             prompt=prompt,
@@ -107,9 +105,34 @@ def handle_text(msg):
         else:
             return client.message.send_text(msg.source, "没有找到歌曲")
 
-    def GPT(msg):
-        openid = msg.source
+    def ChatGPT(msg):
+        import openai
         openai.api_key = load_json(config_file, 'key')['openai']
+        openid = msg.source
+        group = get_group(openid)
+        users = load_json(wxuser_file)
+        try:
+            messages=users[group][openid]['messages']
+        except:
+            write_user(wxuser_file, group, openid,{'messages':[]})
+            messages=[]
+        new_usercontent =  {'role':'user','content':msg.content}
+        messages.append(new_usercontent.copy())
+        response = openai.ChatCompletion.create(
+           model="gpt-3.5-turbo",
+           messages=messages
+        )
+        reply_content = response["choices"][0]["message"]['content']
+        new_assis = {'role':'assistant','content':reply_content}
+        new_messages = messages + [new_assis.copy()]
+        write_user(wxuser_file, group, openid,{'messages':new_messages})
+        return client.message.send_text(openid, reply_content)
+
+
+    def Davinvi(msg):
+        import openai
+        openid = msg.source
+        openai.api_key = load_json(config_json, 'key')['openai']
         users = load_json(wxuser_file)
         group = get_group(openid)
         preview=users[group][openid]['prompt']
@@ -121,10 +144,10 @@ def handle_text(msg):
         )
         reply_content = response["choices"][0]["text"]
         new_preview=preview+msg.content+reply_content
-        write_user(wxuser_file, group, msg.source, 'prompt', new_preview)
+        write_user(wxuser_file, group, msg.source,{"prompt":new_preview})
         return client.message.send_text(openid, reply_content)
 
-    text_handler = text_handlers.get(msg.content[:4], GPT)
+    text_handler = text_handlers.get(msg.content[:4], ChatGPT)
     return text_handler(msg)
 
 
@@ -196,11 +219,11 @@ def handle_event(msg):
             for i in range(4):
                 data.update({
                     f"class{i+1}": {
-                        "value": table[today]['class'][i],
+                        "value": table[today][i][0],
                         "color": "#777777"
                     },
                     f"room{i+1}": {
-                        "value": table[today]['room'][i],
+                        "value": table[today][i][1],
                         "color": "#777777"
                     }
                 })
@@ -232,17 +255,52 @@ def handle_event(msg):
         def new_chat(msg, _):
             openid=msg.source
             group = get_group(openid)
-            write_user(wxuser_file, group, openid, 'prompt', ' ')
-            return client.message.send_text(openid, 'GPT新对话') 
+            write_user(wxuser_file, group, openid, {"messages":[]})
+            write_user(wxuser_file, group, openid, {"prompt":""})
+            return client.message.send_text(openid, 'GPT新对话')
+            
+        @register_click_handler('tq')
+        def good_morning(msg, _):
+            openid, group = msg.source, get_group(openid)
+            today, special_day=datetime.datetime.now(), datetime.datetime(2022, 9, 21)
+            Config = load_json(config_file)
+            morning_template=Config['templates']['morning'][group]
+            hefeng_index_url, hefeng_3d_url = Config['url']['hefeng_api']['index'], Config['url']['hefeng_api']['3d']
+            hefeng_key = Config['key']['hefeng']
+            url_1 = f"{hefeng_index_url}type=3,5&location={location_id}&key={hefeng_key}"
+            url_2 = f"{hefeng_3d_url}location={location_id}&key={hefeng_key}"
+            hefeng_response_1, hefeng_response_2 = requests.get(url_1).json(), requests.get(url_2).json()
+            if hefeng_response_1['code'] != '200':
+                return client.message.send_text(openid, "天气获取失败")
+            url = hefeng_response_2['fxLink']
+            daily1, daily2= hefeng_response_1['daily'], hefeng_response_2['daily']
+            data={
+                "time":{"value": today.strftime("%Y年%m月%d日"), "color": "#777777"},
+                "number":{"value": (today-day).days, "color": "#777777"},
+                "location": {"value": location_map[user_info['location']], "color": "#FFA07A"},
+                "day": {"value": daily2[0]['textDay'], "color": "#777777"},
+                "night": {"value": daily2[0]['textNight'], "color": "#777777"},
+                "tlv":{"value": daily1[0]['category'], "color": colors['temperature_color'][daily1[0]['level']]},
+                "tad":{"value": daily1[0]['text'], "color": "#777777"},
+                "plv":{"value": daily1[1]['category'], "color": colors['purple_color'][daily1[1]['level']]},
+                "pad":{"value": daily1[1]['text'], "color": "#777777"},
+                "remark":{"value": "Have a nice day!", "color": "#FFA07A"}
+                }
+            re = client.message.send_template(openid, morning_template, data, url)
+            print(re)
+        
 
         click_handler = click_handlers.get(msg.key[:2])
         return click_handler(msg, msg.key[2:])
 
+
     def handle_unsupported_event(msg):
         return ''
 
+
     event_handler = event_handlers.get(msg.event, handle_unsupported_event)
     return event_handler(msg)
+
 
 def handle_unsupported(msg):
     return ''

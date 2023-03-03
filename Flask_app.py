@@ -58,7 +58,6 @@ def clear():
 @app.route('/<openid>', methods=['GET', 'POST'])
 def display_timetable(openid):
     if request.method == 'GET':
-        print(openid)
         group = get_group(openid)
         if group is None:
             return "User Not Found"
@@ -66,7 +65,7 @@ def display_timetable(openid):
             return jsonify(load_json(wxuser_file)[group][openid]['table'])
         except:
             return "No timetable found"
-    elif request.method == 'POST':
+    else:
         return "POST"
 
 
