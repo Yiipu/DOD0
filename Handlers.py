@@ -234,11 +234,11 @@ def handle_event(msg):
             for i in range(4):
                 data.update({
                     f"class{i+1}": {
-                        "value": table[today][i][0],
+                        "value": table[today]['class'][i],
                         "color": "#777777"
                     },
                     f"room{i+1}": {
-                        "value": table[today][i][1],
+                        "value": table[today]['room'][i],
                         "color": "#777777"
                     }
                 })
