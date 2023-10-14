@@ -1,4 +1,7 @@
 # DOD0  
+
+使用 Flask 框架，基于 OpenAI 提供的 API 实现大部分功能。
+
 DOD0/  
 │  
 ├── .gitignore             # Git 忽略配置文件  
